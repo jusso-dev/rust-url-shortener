@@ -39,10 +39,14 @@ pub fn update_url(url: UpdateUrl) {
     use crate::schema::urls::dsl::*;
 
     let connection = establish_connection();
-    let existing_record = urls.find(url.id).first::<DBUrl>(&connection).expect("Error loading url");
+    let updated_url = UpdateUrl {
+        id: url.id,
+        short_url: url.short_url,
+        long_url: url.long_url
+    };
 
     diesel::update(urls.find(url.id))
-        .set(&existing_record)
+        .set(&updated_url)
         .execute(&connection)
         .expect("Error updating user");
 }

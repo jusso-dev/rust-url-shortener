@@ -26,7 +26,8 @@ pub struct ApiUrl {
     pub long_url: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, AsChangeset)]
+#[table_name = "urls"]
 pub struct UpdateUrl {
     pub id: i32,
     pub short_url: String,
