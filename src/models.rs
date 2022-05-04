@@ -33,3 +33,8 @@ pub struct UpdateUrl {
     pub short_url: String,
     pub long_url: String
 }
+
+#[derive(Debug, Serialize)]
+pub struct HealthCheck {
+    pub message: String
+}
