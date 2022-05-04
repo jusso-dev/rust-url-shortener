@@ -7,18 +7,21 @@ use chrono::{ NaiveDateTime };
 use crate::lib::establish_connection;
 use crate::models::{Url as DBUrl, NewUrl};
 
-pub fn get_urls() -> Vec<DBUrl> {
+pub fn get_urls() -> Option<Vec<DBUrl>> {
     use crate::schema::urls::dsl::*;
 
     let connection = establish_connection();
-    let results = urls
-        .load::<DBUrl>(&connection)
-        .unwrap();
     
-    return results;
+    let results = urls
+        .load::<DBUrl>(&connection);
+        
+    match results {
+        Ok(results) => Some(results),
+        Err(_) => None
+    }
 }
 
-pub fn create_url(url: ApiUrl) {
+pub fn create_url(url: ApiUrl) -> Option<bool> {
     use crate::schema::urls::dsl::*;
 
     let connection = establish_connection();
@@ -27,14 +30,18 @@ pub fn create_url(url: ApiUrl) {
         long_url: &url.long_url,
         created_at: datetime_helper()
     };
+    
+    let result = diesel::insert_into(urls)
+            .values(&new_url)
+            .execute(&connection);
 
-    diesel::insert_into(urls)
-        .values(&new_url)
-        .execute(&connection)
-        .expect("Error saving new url.");
+    match result {
+        Ok(_) => Some(true),
+        Err(_) => Some(false)
+    }
 }
 
-pub fn update_url(url: UpdateUrl) {
+pub fn update_url(url: UpdateUrl) -> Option<bool> {
     println!("Updating user: {:?}", url);
     use crate::schema::urls::dsl::*;
 
@@ -45,19 +52,28 @@ pub fn update_url(url: UpdateUrl) {
         long_url: url.long_url
     };
 
-    diesel::update(urls.find(url.id))
+    let result = diesel::update(urls.find(url.id))
         .set(&updated_url)
-        .execute(&connection)
-        .expect("Error updating user");
+        .execute(&connection);
+
+    match result {
+        Ok(_) => Some(true),
+        Err(_) => Some(false)
+    }
 }
 
-pub fn delete_user(id: i32) {
+pub fn delete_user(id: i32) -> Option<bool> {
     use crate::schema::urls::dsl::*;
 
     let connection = establish_connection();
-    diesel::delete(urls.find(id))
-        .execute(&connection)
-        .expect("Error deleting user");
+
+    let result = diesel::delete(urls.find(id))
+        .execute(&connection);
+
+    match result {
+        Ok(_) => Some(true),
+        Err(_) => Some(false)
+    }
 }
 
 fn datetime_helper() -> Option<NaiveDateTime> {

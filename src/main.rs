@@ -23,25 +23,40 @@ async fn ping() -> Json<String> {
 #[get("/get-urls")]
 async fn get_urls() -> Json<Vec<Url>> {
     let urls = url_ops::get_urls();
-    Json(urls)
+    match urls {
+        Some(urls) => Json(urls),
+        None => Json(vec![])
+    }
 }
 
 #[put("/update-url")]
 async fn update_url(url:Json<UpdateUrl>) -> Result<String> {
-    url_ops::update_url(url.into_inner());
-    Ok("Success".to_string())
+    let result = url_ops::update_url(url.into_inner());
+    match result {
+        Some(true) => Ok("Updated".to_string()),
+        Some(false) => Ok("Failed".to_string()),
+        None => Ok("Failed".to_string())
+    }
 }
 
 #[post("/add-url")]
 async fn add_url(url: Json<ApiUrl>) -> Result<String> {
-    url_ops::create_url(url.into_inner());
-    Ok("Success".to_string())
+    let result = url_ops::create_url(url.into_inner());
+    match result {
+        Some(true) => Ok("Created".to_string()),
+        Some(false) => Ok("Failed".to_string()),
+        None => Ok("Failed".to_string())
+    }
 }
 
 #[delete("/delete-url/{id}")]
 async fn delete_url(id:web::Path<i32>) -> Result<String> {
-    url_ops::delete_user(id.into_inner());
-    Ok("Success".to_string())
+    let result = url_ops::delete_user(id.into_inner());
+    match result {
+        Some(true) => Ok("Deleted".to_string()),
+        Some(false) => Ok("Failed".to_string()),
+        None => Ok("Failed".to_string())
+    }
 }
 
 #[actix_web::main]
