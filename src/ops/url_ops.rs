@@ -1,16 +1,14 @@
+use crate::lib::get_connection_pool;
 use crate::ApiUrl;
 use crate::models::UpdateUrl;
-use chrono::Utc;
 use diesel::prelude::*;
-use chrono::{ NaiveDateTime };
-
-use crate::lib::establish_connection;
+use chrono::{ NaiveDateTime, Utc };
 use crate::models::{Url as DBUrl, NewUrl};
 
 pub fn get_urls() -> Option<Vec<DBUrl>> {
     use crate::schema::urls::dsl::*;
 
-    let connection = establish_connection();
+    let connection = get_connection_pool().get().unwrap();
     
     let results = urls
         .load::<DBUrl>(&connection);
@@ -24,7 +22,7 @@ pub fn get_urls() -> Option<Vec<DBUrl>> {
 pub fn create_url(url: ApiUrl) -> Option<bool> {
     use crate::schema::urls::dsl::*;
 
-    let connection = establish_connection();
+    let connection = get_connection_pool().get().unwrap();
     let new_url = NewUrl {
         short_url: &url.short_url,
         long_url: &url.long_url,
@@ -45,7 +43,7 @@ pub fn update_url(url: UpdateUrl) -> Option<bool> {
     println!("Updating user: {:?}", url);
     use crate::schema::urls::dsl::*;
 
-    let connection = establish_connection();
+    let connection = get_connection_pool().get().unwrap();
     let updated_url = UpdateUrl {
         id: url.id,
         short_url: url.short_url,
@@ -65,7 +63,7 @@ pub fn update_url(url: UpdateUrl) -> Option<bool> {
 pub fn delete_user(id: i32) -> Option<bool> {
     use crate::schema::urls::dsl::*;
 
-    let connection = establish_connection();
+    let connection = get_connection_pool().get().unwrap();
 
     let result = diesel::delete(urls.find(id))
         .execute(&connection);
