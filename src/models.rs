@@ -11,7 +11,7 @@ pub struct Url {
     pub created_at: NaiveDateTime
 }
 
-#[derive(Insertable, Deserialize)]
+#[derive(Eq, PartialEq, Insertable, Deserialize)]
 #[table_name = "urls"]
 pub struct NewUrl<'a> {
     pub short_url: &'a str,
@@ -20,7 +20,7 @@ pub struct NewUrl<'a> {
 }
 
 // Used to create new URLs from API endpoint
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ApiUrl {
     pub short_url: String,
     pub long_url: String,
