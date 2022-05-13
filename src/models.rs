@@ -38,3 +38,10 @@ pub struct UpdateUrl {
 pub struct HealthCheck {
     pub message: String
 }
+
+#[derive(Debug)]
+pub enum Validation {
+    Success,
+    UrlInvalid,
+    UrlDuplicate
+}

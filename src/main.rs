@@ -11,6 +11,7 @@ mod models;
 use crate::models::HealthCheck;
 use crate::models::ApiUrl;
 use crate::models::UpdateUrl;
+use crate::models::Validation;
 use ops::url_ops;
 
 use actix_web::{get, put, post, delete, web, App, HttpServer, web::Json, HttpResponse, Responder};
@@ -44,11 +45,11 @@ async fn update_url(url:Json<UpdateUrl>) -> impl Responder {
 
 #[post("/add-url")]
 async fn add_url(url: Json<ApiUrl>) -> impl Responder {
-    let result = url_ops::create_url(url.into_inner());
+    let result = url_ops::create_url(url.into_inner()).await.unwrap();
     match result {
-        Some(true) => return HttpResponse::Ok().json("Created".to_string()),
-        Some(false) => return HttpResponse::BadRequest().json("Duplicate long_url detected".to_string()),
-        None => return HttpResponse::InternalServerError().json("Failed".to_string())
+        Validation::UrlDuplicate => return HttpResponse::Conflict().json("Url already exists".to_string()),
+        Validation::UrlInvalid => return HttpResponse::BadRequest().json("Invalid URL".to_string()),
+        Validation::Success => HttpResponse::Ok().json("Created".to_string())
     }
 }
 
