@@ -9,7 +9,7 @@ dotenv = "0.15.0"
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
 r2d2 = "0.8.9"
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.11", features = ["json"] }
 
 [dependencies.diesel]
 features = ["postgres", "r2d2", "chrono"]
