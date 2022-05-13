@@ -1,6 +1,6 @@
-use crate::lib::get_connection_pool;
+use crate::{lib::get_connection_pool};
 use crate::ApiUrl;
-use crate::models::UpdateUrl;
+use crate::models::{UpdateUrl, Validation};
 use diesel::prelude::*;
 use chrono::{ NaiveDateTime, Utc };
 use crate::models::{Url as DBUrl, NewUrl};
@@ -19,11 +19,16 @@ pub fn get_urls() -> Option<Vec<DBUrl>> {
     }
 }
 
-pub fn create_url(url: ApiUrl) -> Option<bool> {
+pub async fn create_url(url: ApiUrl) -> Option<Validation> {
 
     if is_duplicate_url(url.long_url.clone()) {
         print!("Duplicate URL");
-        return Some(false);
+        return Some(Validation::UrlDuplicate);
+    }
+
+    if !validate_url(url.long_url.clone()).await {
+        print!("Invalid URL");
+        return Some(Validation::UrlInvalid);
     }
 
     use crate::schema::urls::dsl::*;
@@ -41,7 +46,7 @@ pub fn create_url(url: ApiUrl) -> Option<bool> {
             .unwrap();
 
     match result {
-        1 => Some(true),
+        1 => Some(Validation::Success),
         _ => None
     }
 }
@@ -78,6 +83,20 @@ pub fn delete_user(_id: i32) -> Option<bool> {
     match result {
         Ok(_) => Some(true),
         Err(_) => Some(false)
+    }
+}
+
+async fn validate_url(check_long_url:String) -> bool {
+
+    let resp = reqwest::get(check_long_url)
+        .await
+        .unwrap();
+
+    if resp.status().is_success() {
+        return true;
+    } else {
+        println!("Invalid URL");
+        return false;
     }
 }
 
