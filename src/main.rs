@@ -13,7 +13,7 @@ use crate::models::ApiUrl;
 use crate::models::UpdateUrl;
 use ops::url_ops;
 
-use actix_web::{get, put, post, delete, web, App, HttpServer, web::Json, Result, HttpResponse, Responder};
+use actix_web::{get, put, post, delete, web, App, HttpServer, web::Json, HttpResponse, Responder};
 
 #[get("/")]
 async fn ping() -> Json<HealthCheck> {
@@ -47,7 +47,7 @@ async fn add_url(url: Json<ApiUrl>) -> impl Responder {
     let result = url_ops::create_url(url.into_inner());
     match result {
         Some(true) => return HttpResponse::Ok().json("Created".to_string()),
-        Some(false) => return HttpResponse::InternalServerError().json("Failed".to_string()),
+        Some(false) => return HttpResponse::BadRequest().json("Duplicate long_url detected".to_string()),
         None => return HttpResponse::InternalServerError().json("Failed".to_string())
     }
 }
@@ -64,7 +64,7 @@ async fn delete_url(id:web::Path<i32>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let port = 3000;
+    let port = 3001;
 
     println!("Server started on port {}", &port);
     HttpServer::new(|| {

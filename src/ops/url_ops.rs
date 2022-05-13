@@ -20,6 +20,12 @@ pub fn get_urls() -> Option<Vec<DBUrl>> {
 }
 
 pub fn create_url(url: ApiUrl) -> Option<bool> {
+
+    if is_duplicate_url(url.long_url.clone()) {
+        print!("Duplicate URL");
+        return Some(false);
+    }
+
     use crate::schema::urls::dsl::*;
 
     let connection = get_connection_pool().get().unwrap();
@@ -31,11 +37,12 @@ pub fn create_url(url: ApiUrl) -> Option<bool> {
     
     let result = diesel::insert_into(urls)
             .values(&new_url)
-            .execute(&connection);
+            .execute(&connection)
+            .unwrap();
 
     match result {
-        Ok(_) => Some(true),
-        Err(_) => Some(false)
+        1 => Some(true),
+        _ => None
     }
 }
 
@@ -60,17 +67,34 @@ pub fn update_url(url: UpdateUrl) -> Option<bool> {
     }
 }
 
-pub fn delete_user(id: i32) -> Option<bool> {
+pub fn delete_user(_id: i32) -> Option<bool> {
     use crate::schema::urls::dsl::*;
 
     let connection = get_connection_pool().get().unwrap();
 
-    let result = diesel::delete(urls.find(id))
+    let result = diesel::delete(urls.find(_id))
         .execute(&connection);
 
     match result {
         Ok(_) => Some(true),
         Err(_) => Some(false)
+    }
+}
+
+// Check database for duplicate short_url
+fn is_duplicate_url(check_long_url:String) -> bool {
+
+    use crate::schema::urls::dsl::*;
+    let connection = get_connection_pool().get().unwrap();
+    
+    let url_not_found = urls
+    .filter(long_url.eq(&check_long_url))
+    .first::<DBUrl>(&connection)
+    .is_err();
+
+    match url_not_found {
+        true => false,
+        false => true
     }
 }
 
