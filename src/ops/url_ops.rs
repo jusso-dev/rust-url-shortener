@@ -37,11 +37,12 @@ pub fn create_url(url: ApiUrl) -> Option<bool> {
     
     let result = diesel::insert_into(urls)
             .values(&new_url)
-            .execute(&connection);
+            .execute(&connection)
+            .unwrap();
 
     match result {
-        Ok(_) => Some(true),
-        Err(_) => None
+        1 => Some(true),
+        _ => None
     }
 }
 
@@ -89,12 +90,11 @@ fn is_duplicate_url(check_long_url:String) -> bool {
     let url_not_found = urls
     .filter(long_url.eq(&check_long_url))
     .first::<DBUrl>(&connection)
-    .unwrap();
+    .is_err();
 
-    if url_not_found.long_url == check_long_url {
-        return true;
-    } else {
-        return false;
+    match url_not_found {
+        true => false,
+        false => true
     }
 }
 
