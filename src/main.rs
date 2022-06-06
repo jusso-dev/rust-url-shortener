@@ -12,6 +12,7 @@ use crate::models::HealthCheck;
 use crate::models::ApiUrl;
 use crate::models::UpdateUrl;
 use crate::models::Validation;
+use actix_web::http;
 use ops::url_ops;
 
 use actix_web::{get, put, post, delete, web, App, HttpServer, web::Json, HttpResponse, Responder};
@@ -30,6 +31,20 @@ async fn get_urls() -> impl Responder {
     match urls {
         Some(urls) => return HttpResponse::Ok().json(urls),
         None => return HttpResponse::InternalServerError().json("Error getting urls")
+    }
+}
+
+#[get("/redirect/{short_url}")]
+async fn redirect(short_url:web::Path<String>) -> impl Responder{
+    if short_url.to_string() == "" {
+        return HttpResponse::BadRequest().json("No short url provided");
+    }
+    let url = url_ops::get_url(short_url.to_string());
+    match url {
+        Some(_url) => return HttpResponse::TemporaryRedirect()
+        .insert_header((http::header::LOCATION, _url.long_url.to_string()))
+        .finish(),
+        None => return HttpResponse::NotFound().json("Url not found")
     }
 }
 
@@ -72,6 +87,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(ping)
             .service(get_urls)
+            .service(redirect)
             .service(add_url)
             .service(update_url)
             .service(delete_url)
