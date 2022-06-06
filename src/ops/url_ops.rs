@@ -19,6 +19,24 @@ pub fn get_urls() -> Option<Vec<DBUrl>> {
     }
 }
 
+pub fn get_url(url:String) -> Option<DBUrl> {
+
+    use crate::schema::urls::dsl::*;
+    let connection = get_connection_pool().get().unwrap();
+    
+    // Return a single url
+    let result:DBUrl = urls
+        .filter(short_url.eq(url))
+        .first(&connection)
+        .unwrap();
+        
+    if result.short_url == "" {
+        None
+    } else {
+        Some(result)
+    }
+}
+
 pub async fn create_url(url: ApiUrl) -> Option<Validation> {
 
     if is_duplicate_url(url.long_url.clone()) {
@@ -102,6 +120,10 @@ async fn validate_url(check_long_url:String) -> bool {
 
 // Check database for duplicate short_url
 fn is_duplicate_url(check_long_url:String) -> bool {
+
+    if check_long_url == "" {
+        return false;
+    }
 
     use crate::schema::urls::dsl::*;
     let connection = get_connection_pool().get().unwrap();
